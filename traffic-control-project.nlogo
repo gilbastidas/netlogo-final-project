@@ -21,14 +21,17 @@ to create-or-remove-cars
   if number-of-cars > count road-patches [
     set number-of-cars count road-patches
   ]
+
   create-turtles (number-of-cars - count turtles) [
-    set color 109 ; Color blue
+    set color 108 + random-float 1.0
     move-to one-of free road-patches
     set heading 90
     set top-speed 0.5 + random-float 0.5
     set speed 0.5
   ]
-
+  if count turtles > number-of-cars [
+    let n count turtles - number-of-cars
+  ]
 end
 
 to-report free [ road-patches ]
@@ -40,14 +43,17 @@ end
 
 to draw-road
   ; Road surrounded by green grass of varying shades
-  ask patches [ set pcolor green - random-float 0.5  ]
+  ask patches [
+    ; the road is surrounded by green grass of varying shades
+    set pcolor green - random-float 0.5
+  ]
   set lanes n-values number-of-lanes
   ; Update the values of list lanes
   [
     [n] -> number-of-lanes - (n * 2) - 1
   ]
   ; Create the road with the height from number-of-lanes to -number-of-lanes
-  ask patches with [ abs pycor <= number-of-lanes ] [
+  ask patches with [ (abs pycor <= number-of-lanes) or (abs pxcor <= number-of-lanes) ] [
     ; Different shades of gray for lanes
     set pcolor grey - 2.5 + random-float 0.25
   ]
@@ -60,8 +66,14 @@ to draw-road-lines
     if not member? y lanes [
       ; Draw lines on road patches that are not part of a lane
       ifelse abs y = number-of-lanes
-      [ draw-line y yellow 0 ] ; Yellow for the sides of the road
-      [ draw-line y white 0.5 ] ; dashed white between lanes
+      [
+        draw-line y yellow 0
+        draw-yline y yellow 0
+      ] ; Yellow for the sides of the road
+      [
+        draw-line y white 0.5
+        draw-yline y white 0.5
+      ] ; dashed white between lanes
     ]
     set y y + 1 ; Move up one patch
   ]
@@ -76,6 +88,25 @@ to draw-line [ y line-color gap ]
     hide-turtle
     set color line-color
     set heading 90
+    repeat world-width [
+      pen-up
+      forward gap
+      pen-down
+      forward (1 - gap)
+    ]
+    die
+  ]
+end
+
+to draw-yline [ y line-color gap ]
+  ; We use a temporary turtle to draw the line:
+  ; - with a gap of zero, we get a continuous line;
+  ; - with a gap greater than zero, we get a dasshed line.
+  create-turtles 1 [
+    setxy y (min-pycor - 0.5)
+    hide-turtle
+    set color line-color
+    set heading 180
     repeat world-width [
       pen-up
       forward gap
@@ -168,10 +199,10 @@ ticks
 30.0
 
 BUTTON
-20
-32
-86
-65
+21
+33
+87
+66
 setup
 setup
 NIL
@@ -208,7 +239,7 @@ number-of-cars
 number-of-cars
 1
 100
-57.0
+15.0
 1
 1
 NIL
@@ -239,8 +270,8 @@ SLIDER
 deceleration
 deceleration
 0.01
-1
-0.02
+.1
+0.06
 0.01
 1
 NIL
