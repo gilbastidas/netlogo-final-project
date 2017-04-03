@@ -92,11 +92,11 @@ to draw-road-lines
     ifelse x = (first vlanes) + 1
     [
       draw-yline x white 0.5
-      draw-yline (- x white 0.5
+      draw-yline (- x) white 0.5
     ]
     [
       draw-yline x yellow 0
-      ;draw-yline (- x) yellow 0
+      draw-yline (- x) yellow 0
     ]
     set x x + 2.5
   ]
@@ -255,7 +255,7 @@ number-of-lanes
 number-of-lanes
 1
 2
-1.0
+2.0
 1
 1
 NIL
