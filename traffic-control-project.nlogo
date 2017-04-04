@@ -15,6 +15,7 @@ to setup
   clear-all
   set-default-shape turtles "car"
   draw-road
+  draw-places
   create-or-remove-cars
   reset-ticks
 end
@@ -46,6 +47,10 @@ to-report free [ road-patches ]
   ]
 end
 
+to draw-places
+
+end
+
 to draw-road
   ; Road surrounded by green grass of varying shades
   ask patches [
@@ -61,6 +66,19 @@ to draw-road
   ;]
   ; Create the road with the height from number-of-lanes to -number-of-lanes
   ;ask patches with [ (abs pycor <= number-of-lanes) or (abs pxcor <= number-of-lanes) ] [
+
+  ask patches with [ (abs pxcor <= 12) and  (abs pxcor >= 12) ] [
+    ; Different shades of gray for lanes
+    set pcolor 108 + random-float 1.0
+  ]
+  ask patches with [ (abs pxcor <= 6) and  (abs pxcor >= 6) ] [
+    ; Different shades of gray for lanes
+    set pcolor 108 + random-float 1.0
+  ]
+  ask patches with [ (abs pycor <= 8) and (abs pycor >= 8)] [
+    ; Different shades of gray for lanes
+    set pcolor 108 + random-float 1.0
+  ]
   ask patches with [ (abs pycor <= 7) and (abs pycor >= 3)] [
     ; Different shades of gray for lanes
     set pcolor grey - 2.5 + random-float 0.25
@@ -69,6 +87,7 @@ to draw-road
     ; Different shades of gray for lanes
     set pcolor grey - 2.5 + random-float 0.25
   ]
+
   draw-road-lines
 end
 
@@ -100,14 +119,6 @@ to draw-road-lines
     ]
     set x x + 2.5
   ]
-
-  ;draw-yline 9 white 0.5
-  ;draw-yline 11.5 yellow 0
-  ;draw-yline 6.5 yellow 0
-
-  ;draw-yline -9 white 0.5
-  ;draw-yline -11.5 yellow 0
-  ;draw-yline -6.5 yellow 0
 end
 
 to draw-line [ y line-color gap ]
@@ -248,24 +259,9 @@ NIL
 
 SLIDER
 98
-32
+34
 270
-65
-number-of-lanes
-number-of-lanes
-1
-2
-1.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-98
-83
-270
-116
+67
 number-of-cars
 number-of-cars
 1
@@ -295,9 +291,9 @@ NIL
 
 SLIDER
 98
-135
+86
 270
-168
+119
 deceleration
 deceleration
 0.01
@@ -310,9 +306,9 @@ HORIZONTAL
 
 SLIDER
 98
-182
+133
 270
-215
+166
 acceleration
 acceleration
 .001
