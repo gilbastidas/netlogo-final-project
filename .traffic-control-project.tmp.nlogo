@@ -68,6 +68,7 @@ to draw-road
   ;ask patches with [ (abs pycor <= number-of-lanes) or (abs pxcor <= number-of-lanes) ] [
 
 
+
   ask patches with [ (abs pycor <= 8) and (abs pycor >= 8)] [
     ; Different shades of gray for lanes
     set pcolor 108 + random-float 1.0
@@ -80,6 +81,7 @@ to draw-road
     ; Different shades of gray for lanes
     set pcolor grey - 2.5 + random-float 0.25
   ]
+
   draw-road-lines
 end
 

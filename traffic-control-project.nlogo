@@ -15,7 +15,6 @@ to setup
   clear-all
   set-default-shape turtles "car"
   draw-road
-  draw-places
   create-or-remove-cars
   reset-ticks
 end
@@ -47,9 +46,6 @@ to-report free [ road-patches ]
   ]
 end
 
-to draw-places
-
-end
 
 to draw-road
   ; Road surrounded by green grass of varying shades
@@ -67,14 +63,7 @@ to draw-road
   ; Create the road with the height from number-of-lanes to -number-of-lanes
   ;ask patches with [ (abs pycor <= number-of-lanes) or (abs pxcor <= number-of-lanes) ] [
 
-  ask patches with [ (abs pxcor <= 12) and  (abs pxcor >= 12) ] [
-    ; Different shades of gray for lanes
-    set pcolor 108 + random-float 1.0
-  ]
-  ask patches with [ (abs pxcor <= 6) and  (abs pxcor >= 6) ] [
-    ; Different shades of gray for lanes
-    set pcolor 108 + random-float 1.0
-  ]
+
   ask patches with [ (abs pycor <= 8) and (abs pycor >= 8)] [
     ; Different shades of gray for lanes
     set pcolor 108 + random-float 1.0
