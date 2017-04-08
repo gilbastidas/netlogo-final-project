@@ -9,6 +9,7 @@ turtles-own [
   orientation
   start-point
   end-point
+  up-car?
 ]
 
 to setup
@@ -22,15 +23,21 @@ end
 to create-or-remove-cars
   ; Make sure don't have too many cars
   ;let road-patches patches with [ (member? pycor lanes) or (member? pxcor lanes)  ]
-  let road-patches patches with [ member? pycor hlanes  ]
+  let road-patches patches with [ (member? pycor hlanes) or (member? pxcor vlanes)  ]
   if number-of-cars > count road-patches [
     set number-of-cars count road-patches
   ]
 
   create-turtles (number-of-cars - count turtles) [
     set color 108 + random-float 1.0
-    move-to one-of free road-patches
-    set heading 90
+    ;ifelse (member? xcor vlanes)
+    ;[ set up-car? true ]
+    ;[ set up-car? false ]
+    ask turtles with [member? xcor vlanes] [set up-car? true]
+    move-to one-of free road-patches with [not any? turtles-on self]
+    ifelse up-car? = true
+    [ set heading 180 ]
+    [ set heading 90 ]
     set top-speed 0.5 + random-float 0.5
     set speed 0.5
   ]
@@ -54,8 +61,8 @@ to draw-road
     set pcolor green - random-float 0.5
   ]
   ;set lanes n-values number-of-lanes
-  set hlanes [6 4]
-  set vlanes [8 10]
+  set hlanes [6 4 -6 -4]
+  set vlanes [8 10 -8 -10]
   ; Update the values of list lanes
   ;[
    ; [n] -> number-of-lanes - (n * 2) - 1
@@ -65,8 +72,8 @@ to draw-road
 
 
   ask patches with [ (abs pycor <= 8) and (abs pycor >= 8)] [
-    ; Different shades of gray for lanes
-    set pcolor 108 + random-float 1.0
+    ; Different shades of blue for lanes
+    set pcolor 106 + random-float 1.0
   ]
   ask patches with [ (abs pycor <= 7) and (abs pycor >= 3)] [
     ; Different shades of gray for lanes
@@ -155,7 +162,13 @@ to go
 end
 
 to move-forward ; Turtle procedure
-  set heading 90
+  ifelse up-car? = true
+    [ set heading 180
+
+    ]
+    [ set heading 90
+
+    ]
   speed-up-car ; Tentatively speed up the car, but might have to slow down
   let blocking-cars other turtles in-cone (1 + speed) 180 with [ y-distance <= 1 ]
   let blocking-car min-one-of blocking-cars [ distance myself ]
@@ -255,7 +268,7 @@ number-of-cars
 number-of-cars
 1
 100
-28.0
+76.0
 1
 1
 NIL
@@ -287,7 +300,7 @@ deceleration
 deceleration
 0.01
 .1
-0.06
+0.01
 0.01
 1
 NIL
