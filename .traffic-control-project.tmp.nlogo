@@ -313,18 +313,18 @@ to set-signal-colors  ;; intersection (patch) procedure
         set pcolor red + 1
       ]
       ask patches with [ (abs pycor <= 7) and (abs pycor >= 3) and (pxcor <= -12) and (pxcor >= -12) ] [
-        set pcolor green + 1
+        set pcolor green
       ]
       ask patches with [ (abs pycor <= 7) and (abs pycor >= 3) and (pxcor <= 6) and (pxcor >= 6) ] [
-        set pcolor green + 1
+        set pcolor green
       ]
     ]
     [
       ask patches with [ ( pycor <= 8) and ( pycor >= 8) and (abs pxcor <= 11) and (abs pxcor >= 7) ] [
-        set pcolor green + 1
+        set pcolor green
       ]
       ask patches with [ ( pycor <= -2) and ( pycor >= -2) and (abs pxcor <= 11) and (abs pxcor >= 7) ] [
-        set pcolor green + 1
+        set pcolor green
       ]
       ask patches with [ (abs pycor <= 7) and (abs pycor >= 3) and (pxcor <= -12) and (pxcor >= -12) ] [
         set pcolor red + 1
