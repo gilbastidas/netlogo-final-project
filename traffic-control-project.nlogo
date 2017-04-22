@@ -1,6 +1,8 @@
 globals [
-  hlanes ; A list of the y coordinates of different lanes
-  vlanes ; A list of the y coordinates of different lanes
+  right_lanes ; A list of the y coordinates of different lanes right lanes
+  up_lanes ; A list of the y coordinates of different lanes up lanes
+  down_lanes
+  left_lanes ; Left lanes
   num-cars-stopped ;; the number of cars that are stopped during a single pass thru the go procedure
   intersections ;; agentset containing the patches that are intersections
   phase ;; keeps track of the phase
@@ -14,6 +16,9 @@ turtles-own [
   start-point
   end-point
   up-car?
+  down-car?
+  right-car?
+  left-car?
   wait-time ;; the amount of time since the last time a turtle has moved
 ]
 
@@ -44,7 +49,7 @@ end
 
 to create-or-remove-cars
   ; Make sure don't have too many cars
-  let road-patches patches with [ (member? pycor hlanes) or (member? pxcor vlanes)  ]
+  let road-patches patches with [ (member? pycor right_lanes) or (member? pxcor up_lanes) or (member? pycor left_lanes) or (member? pxcor down_lanes)]
   if number-of-cars > count road-patches [
     set number-of-cars count road-patches
   ]
@@ -52,13 +57,13 @@ to create-or-remove-cars
   create-turtles (number-of-cars - count turtles) [
     set color 108 + random-float 1.0
     set wait-time 0
-    ask turtles with [member? xcor vlanes] [set up-car? true]
+    set speed 0
+    ask turtles with [member? xcor up_lanes] [set up-car? true set shape "up_car" ]
+    ask turtles with [member? xcor down_lanes] [set down-car? true set shape "down_car" ]
+    ask turtles with [member? ycor right_lanes] [set left-car? true ]
+    ask turtles with [member? ycor left_lanes] [set right-car? true  set shape "left_car" ]
     move-to one-of free road-patches with [not any? turtles-on self]
-    ifelse up-car? = true
-    [ set heading 180 ]
-    [ set heading 90 ]
     set top-speed 0.5 + random-float 0.5
-    set speed 0.5
   ]
   if count turtles > number-of-cars [
     let n count turtles - number-of-cars
@@ -93,8 +98,10 @@ to draw-road
     set pcolor 106 + random-float 1.0
   ]
   ;set lanes n-values number-of-lanes
-  set hlanes [6 4 -6 -4]
-  set vlanes [8 10 -8 -10]
+  set right_lanes [6 4]
+  set left_lanes [-6 -4]
+  set up_lanes [8 10]
+  set down_lanes [-8 -10]
 
   ; Sky patches
   ask patches with [ (abs pycor <= 8) and (abs pycor >= 8)] [
@@ -138,10 +145,10 @@ to setup-intersections
 end
 
 to draw-road-lines
-  let y (first hlanes) + 1.5
-  let x (first vlanes) - 1.5
+  let y (first right_lanes) + 1.5
+  let x (first up_lanes) - 1.5
   while [ y > 0 ] [
-    ifelse y = (first hlanes) - 1
+    ifelse y = (first right_lanes) - 1
     [
       draw-line y white 0.5
       draw-line (- y) white 0.5
@@ -154,7 +161,7 @@ to draw-road-lines
   ]
 
   while [ x < 12 ] [
-    ifelse x = (first vlanes) + 1
+    ifelse x = (first up_lanes) + 1
     [
       draw-yline x white 0.5
       draw-yline (- x) white 0.5
@@ -209,26 +216,11 @@ to go
   update-current
   set-signals
   set num-cars-stopped 0
-  create-or-remove-cars
-  ask turtles [ move-forward ]
+  ask turtles [
+    set-car-speed
+    fd speed ]
   next-phase
   tick
-end
-
-to move-forward ; Turtle procedure
-  ifelse up-car? = true
-    [ set heading 180 ]
-    [ set heading 90  ]
-  speed-up-car ; Tentatively speed up the car, but might have to slow down
-  let blocking-cars other turtles in-cone (1 + speed) 180 with [ y-distance <= 1 ]
-  let blocking-car min-one-of blocking-cars [ distance myself ]
-  if blocking-car != nobody [
-    ; match the speed of the car ahead of you and then slow
-    ; down so you are driving a bit slower than that car
-    set speed [ speed ] of blocking-car
-    slow-down-car
-  ]
-  forward speed
 end
 
 ;; cycles phase to the next appropriate value
@@ -247,21 +239,9 @@ end
 to speed-up-car
   set speed (speed + acceleration)
   if speed > top-speed [ set speed top-speed ]
-  if pcolor = red + 1
-  [ set speed 0 ]
+  ;if pcolor = red + 1
+  ;[ set speed 0 ]
 end
-
-;to speed-up-car
-;  set speed (speed + acceleration)
-;  if speed > top-speed [ set speed top-speed ]
-;  ifelse pcolor = red
-;  [ set speed 0 ]
-;  [
-;    ifelse up-car? = true
-;    [ set-speed 0 -1 ]
-;    [ set-speed 1 0 ]
-;  ]
-;end
 
 ;; Set up the current light and the interface to change it.
 to make-current [light]
@@ -306,37 +286,59 @@ to set-signal-colors  ;; intersection (patch) procedure
   [
     ifelse green-light-up?
     [
-      ask patches with [ ( pycor <= 8) and ( pycor >= 8) and (abs pxcor <= 11) and (abs pxcor >= 7) ] [
+      ask patches with [ ( pycor <= -8) and ( pycor >= -8) and ( pxcor <= 11) and ( pxcor >= 7) ] [
         set pcolor red + 1
       ]
-      ask patches with [ ( pycor <= -2) and ( pycor >= -2) and (abs pxcor <= 11) and (abs pxcor >= 7) ] [
+      ask patches with [ ( pycor <= 8) and ( pycor >= 8) and ( pxcor <= -7) and ( pxcor >= -11) ] [
         set pcolor red + 1
       ]
-      ask patches with [ (abs pycor <= 7) and (abs pycor >= 3) and (pxcor <= -12) and (pxcor >= -12) ] [
+      ask patches with [ ( pycor <= -2) and ( pycor >= -2) and ( pxcor <= -7) and ( pxcor >= -11) ] [
+        set pcolor red + 1
+      ]
+      ask patches with [ ( pycor <= 2) and ( pycor >= 2) and ( pxcor <= 11) and ( pxcor >= 7) ] [
+        set pcolor red + 1
+      ]
+      ask patches with [ ( pycor <= 7) and ( pycor >= 3) and (pxcor <= -12) and (pxcor >= -12) ] [
         set pcolor green + 1
       ]
-      ask patches with [ (abs pycor <= 7) and (abs pycor >= 3) and (pxcor <= 6) and (pxcor >= 6) ] [
+      ask patches with [ ( pycor <= -3) and ( pycor >= -7) and (pxcor <= -6) and (pxcor >= -6) ] [
+        set pcolor green + 1
+      ]
+      ask patches with [ ( pycor <= 7) and ( pycor >= 3) and (pxcor <= 6) and (pxcor >= 6) ] [
+        set pcolor green + 1
+      ]
+      ask patches with [ ( pycor <= -3) and ( pycor >= -7) and (pxcor <= 12) and (pxcor >= 12) ] [
         set pcolor green + 1
       ]
     ]
     [
-      ask patches with [ ( pycor <= 8) and ( pycor >= 8) and (abs pxcor <= 11) and (abs pxcor >= 7) ] [
+      ask patches with [ ( pycor <= -8) and ( pycor >= -8) and ( pxcor <= 11) and ( pxcor >= 7) ] [
         set pcolor green + 1
       ]
-      ask patches with [ ( pycor <= -2) and ( pycor >= -2) and (abs pxcor <= 11) and (abs pxcor >= 7) ] [
+      ask patches with [ ( pycor <= 8) and ( pycor >= 8) and ( pxcor <= -7) and ( pxcor >= -11) ] [
         set pcolor green + 1
       ]
-      ask patches with [ (abs pycor <= 7) and (abs pycor >= 3) and (pxcor <= -12) and (pxcor >= -12) ] [
+      ask patches with [ ( pycor <= -2) and ( pycor >= -2) and ( pxcor <= -7) and ( pxcor >= -11) ] [
+        set pcolor green + 1
+      ]
+      ask patches with [ ( pycor <= 2) and ( pycor >= 2) and ( pxcor <= 11) and ( pxcor >= 7) ] [
+        set pcolor green + 1
+      ]
+      ask patches with [ ( pycor <= 7) and ( pycor >= 3) and (pxcor <= -12) and (pxcor >= -12) ] [
         set pcolor red + 1
       ]
-      ask patches with [ (abs pycor <= 7) and (abs pycor >= 3) and (pxcor <= 6) and (pxcor >= 6) ] [
+      ask patches with [ ( pycor <= -3) and ( pycor >= -7) and (pxcor <= -6) and (pxcor >= -6) ] [
+        set pcolor red + 1
+      ]
+      ask patches with [ ( pycor <= 7) and ( pycor >= 3) and (pxcor <= 6) and (pxcor >= 6) ] [
+        set pcolor red + 1
+      ]
+      ask patches with [ ( pycor <= -3) and ( pycor >= -7) and (pxcor <= 12) and (pxcor >= 12) ] [
         set pcolor red + 1
       ]
     ]
   ]
   [
-    ;ask patch-at -1 0 [ set pcolor white ]
-    ;ask patch-at 0 1 [ set pcolor white ]
     ask patches with [ ( pycor <= 8) and ( pycor >= 8) and (abs pxcor <= 11) and (abs pxcor >= 7) ] [
       set pcolor grey - 2.5 + random-float 0.25
     ]
@@ -370,18 +372,33 @@ to set-car-speed  ;; turtle procedure
   ifelse pcolor = red + 1
   [ set speed 0 ]
   [
-    ifelse up-car?
-    [ set-speed 0 -1 ]
-    [ set-speed 1 0 ]
+    ifelse up-car? = true
+    [ set-speed 0 1
+      set heading 360
+    ]
+    [ ifelse down-car? = true
+      [ set-speed 0 -1
+        set heading 180
+      ]
+      [ ifelse left-car? = true
+        [
+          set-speed 1 0
+          set heading 90
+        ]
+        [
+          set-speed -1 0
+          set heading -90
+        ]
+      ]
+    ]
   ]
 end
 
 ;; set the speed variable of the car to an appropriate value (not exceeding the
 ;; speed limit) based on whether there are cars on the patch in front of the car
 to set-speed [ delta-x delta-y ]  ;; turtle procedure
-  ;; get the turtles on the patch in front of the turtle
+                                  ;; get the turtles on the patch in front of the turtle
   let turtles-ahead turtles-at delta-x delta-y
-
   ;; if there are turtles in front of the turtle, slow down
   ;; otherwise, speed up
   ifelse any? turtles-ahead
@@ -392,10 +409,10 @@ to set-speed [ delta-x delta-y ]  ;; turtle procedure
     ]
     [
       set speed [speed] of one-of turtles-ahead
-      slow-down-car
+      slow-down
     ]
   ]
-  [ speed-up-car ]
+  [ speed-up ]
 end
 
 
@@ -407,6 +424,19 @@ to-report y-distance
   report distancexy xcor [ ycor ] of myself
 end
 
+;; decrease the speed of the turtle
+to slow-down  ;; turtle procedure
+  ifelse speed <= 0  ;;if speed < 0
+  [ set speed 0 ]
+  [ set speed speed - acceleration ]
+end
+
+;; increase the speed of the turtle
+to speed-up  ;; turtle procedure
+  ifelse speed > top-speed
+  [ set speed top-speed ]
+  [ set speed speed + acceleration ]
+end
 ;; Methods
 ;; n-values
 ; Reports a list of length size containing values computed by repeatedly running the
@@ -522,7 +552,7 @@ acceleration
 acceleration
 .001
 .01
-0.006
+0.009
 .001
 1
 NIL
@@ -537,7 +567,7 @@ ticks-per-cycle
 ticks-per-cycle
 50
 100
-70.0
+90.0
 10
 1
 NIL
@@ -701,6 +731,16 @@ false
 0
 Circle -7500403 true true 90 90 120
 
+down_car
+false
+0
+Polygon -7500403 true true 180 300 164 279 144 261 135 240 132 226 106 213 84 203 63 185 50 159 50 135 60 75 150 0 165 0 225 0 225 300 180 300
+Circle -16777216 true false 180 180 90
+Circle -16777216 true false 180 30 90
+Polygon -16777216 true false 80 162 78 132 135 134 135 209 105 194 96 189 89 180
+Circle -7500403 true true 195 47 58
+Circle -7500403 true true 195 195 58
+
 face happy
 false
 0
@@ -772,6 +812,16 @@ false
 0
 Polygon -7500403 true true 150 210 135 195 120 210 60 210 30 195 60 180 60 165 15 135 30 120 15 105 40 104 45 90 60 90 90 105 105 120 120 120 105 60 120 60 135 30 150 15 165 30 180 60 195 60 180 120 195 120 210 105 240 90 255 90 263 104 285 105 270 120 285 135 240 165 240 180 270 195 240 210 180 210 165 195
 Polygon -7500403 true true 135 195 135 240 120 255 105 255 105 285 135 285 165 240 165 195
+
+left_car
+false
+0
+Polygon -7500403 true true 0 180 21 164 39 144 60 135 74 132 87 106 97 84 115 63 141 50 165 50 225 60 300 150 300 165 300 225 0 225 0 180
+Circle -16777216 true false 30 180 90
+Circle -16777216 true false 180 180 90
+Polygon -16777216 true false 138 80 168 78 166 135 91 135 106 105 111 96 120 89
+Circle -7500403 true true 195 195 58
+Circle -7500403 true true 47 195 58
 
 line
 true
@@ -895,6 +945,16 @@ Polygon -10899396 true false 105 90 75 75 55 75 40 89 31 108 39 124 60 105 75 10
 Polygon -10899396 true false 132 85 134 64 107 51 108 17 150 2 192 18 192 52 169 65 172 87
 Polygon -10899396 true false 85 204 60 233 54 254 72 266 85 252 107 210
 Polygon -7500403 true true 119 75 179 75 209 101 224 135 220 225 175 261 128 261 81 224 74 135 88 99
+
+up_car
+false
+0
+Polygon -7500403 true true 180 0 164 21 144 39 135 60 132 74 106 87 84 97 63 115 50 141 50 165 60 225 150 300 165 300 225 300 225 0 180 0
+Circle -16777216 true false 180 30 90
+Circle -16777216 true false 180 180 90
+Polygon -16777216 true false 80 138 78 168 135 166 135 91 105 106 96 111 89 120
+Circle -7500403 true true 195 195 58
+Circle -7500403 true true 195 47 58
 
 wheel
 false
