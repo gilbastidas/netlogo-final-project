@@ -58,11 +58,13 @@ to create-or-remove-cars
     set color 108 + random-float 1.0
     set wait-time 0
     set speed 0
-    ask turtles with [member? xcor up_lanes] [set up-car? true set shape "up_car" ]
-    ask turtles with [member? xcor down_lanes] [set down-car? true set shape "down_car" ]
-    ask turtles with [member? ycor right_lanes] [set left-car? true ]
-    ask turtles with [member? ycor left_lanes] [set right-car? true  set shape "left_car" ]
     move-to one-of free road-patches with [not any? turtles-on self]
+    ask turtles with [member? ycor right_lanes] [set up-car? false set down-car? false set left-car? true set right-car? false ]
+    ask turtles with [member? ycor left_lanes] [set up-car? false set down-car? false set left-car? false set right-car? true  set shape "left_car" ]
+    ask turtles with [member? xcor up_lanes] [set up-car? true set down-car? false set left-car? false set right-car? false set shape "up_car" ]
+    ask turtles with [member? xcor down_lanes] [set up-car? false set down-car? true set left-car? false set right-car? false set shape "down_car" ]
+
+
     set top-speed 0.5 + random-float 0.5
   ]
   if count turtles > number-of-cars [
@@ -403,13 +405,19 @@ to set-speed [ delta-x delta-y ]  ;; turtle procedure
   ;; otherwise, speed up
   ifelse any? turtles-ahead
   [
-    ifelse any? (turtles-ahead with [ up-car? != [up-car?] of myself ])
+    ifelse any? (turtles-ahead with [ up-car? = [up-car?] of myself ])
     [
-      set speed 0
+      ifelse any? (turtles-ahead with [ down-car? = [down-car?] of myself ])
+      [
+        set speed [speed] of one-of turtles-ahead
+        slow-down
+      ]
+      [
+        set speed 0
+      ]
     ]
     [
-      set speed [speed] of one-of turtles-ahead
-      slow-down
+      set speed 0
     ]
   ]
   [ speed-up ]
@@ -455,10 +463,10 @@ end
 GRAPHICS-WINDOW
 286
 34
-893
-408
--1
--1
+895
+430
+20
+12
 14.61
 1
 10
@@ -505,7 +513,7 @@ number-of-cars
 number-of-cars
 1
 100
-38.0
+30
 1
 1
 NIL
@@ -552,7 +560,7 @@ acceleration
 acceleration
 .001
 .01
-0.009
+0.01
 .001
 1
 NIL
@@ -567,7 +575,7 @@ ticks-per-cycle
 ticks-per-cycle
 50
 100
-90.0
+90
 10
 1
 NIL
@@ -582,7 +590,7 @@ current-phase
 current-phase
 0
 99
-0.0
+0
 1
 1
 %
@@ -606,7 +614,7 @@ SWITCH
 347
 power?
 power?
-0
+1
 1
 -1000
 
@@ -981,8 +989,9 @@ false
 0
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
+
 @#$#@#$#@
-NetLogo 6.0
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -998,6 +1007,7 @@ true
 0
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
+
 @#$#@#$#@
 0
 @#$#@#$#@
