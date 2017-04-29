@@ -414,8 +414,13 @@ to set-car-speed  ;; turtle procedure
           ifelse destination? = true
           [
             ifelse patch-here = patch first end-point last end-point
-            [set heading 90]
+            ;[set heading 90]
+            ;[facexy first end-point last end-point
+
+            [set destination? false
+              set succesful_agents succesful_agents + 1]
             [facexy first end-point last end-point]
+
           ]
           [set heading 90]
         ]
@@ -651,6 +656,17 @@ power?
 0
 1
 -1000
+
+MONITOR
+134
+375
+254
+420
+NIL
+succesful_agents
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
