@@ -7,6 +7,9 @@ globals [
   intersections ;; agentset containing the patches that are intersections
   phase ;; keeps track of the phase
   current-light  ;; the currently selected light
+  x-coordinate
+  y-coordinate
+  succesful_agents
 ]
 
 turtles-own [
@@ -19,6 +22,7 @@ turtles-own [
   down-car?
   right-car?
   left-car?
+  destination?
   wait-time ;; the amount of time since the last time a turtle has moved
 ]
 
@@ -63,13 +67,35 @@ to create-or-remove-cars
     ask turtles with [member? ycor left_lanes] [set up-car? false set down-car? false set left-car? false set right-car? true  set shape "left_car" ]
     ask turtles with [member? xcor up_lanes] [set up-car? true set down-car? false set left-car? false set right-car? false set shape "up_car" ]
     ask turtles with [member? xcor down_lanes] [set up-car? false set down-car? true set left-car? false set right-car? false set shape "down_car" ]
-
-
     set top-speed 0.5 + random-float 0.5
   ]
   if count turtles > number-of-cars [
     let n count turtles - number-of-cars
   ]
+  set-destination
+end
+
+to set-destination
+  ask turtles with [(member? ycor right_lanes) and (xcor < -12)]
+  [
+    set color white
+    set start-point (list xcor ycor)
+    ask patch-here [set pcolor red]
+    set y-coordinate ycor
+    set x-coordinate xcor
+    ;set end-point one-of patches with [ (pycor = y-coordinate) and (pxcor > 12)]
+    set end-point (list (random(20 - -6) + -6)  y-coordinate)
+    ;ask end-point [set pcolor yellow]
+    ask patch first end-point last end-point [ set pcolor white ]
+    set destination? true
+  ]
+end
+
+to arrive-destination
+  ;ask turtles with start-point != 0
+  ;[
+  ;  set color violet
+  ;]
 end
 
 to setup-globals
@@ -200,7 +226,7 @@ to draw-yline [ y line-color gap ]
   ; - with a gap of zero, we get a continuous line;
   ; - with a gap greater than zero, we get a dasshed line.
   create-turtles 1 [
-    setxy y (min-pycor )
+    setxy y (max-pycor )
     hide-turtle
     set color line-color
     set heading 180
@@ -385,7 +411,13 @@ to set-car-speed  ;; turtle procedure
       [ ifelse left-car? = true
         [
           set-speed 1 0
-          set heading 90
+          ifelse destination? = true
+          [
+            ifelse patch-here = patch first end-point last end-point
+            [set heading 90]
+            [facexy first end-point last end-point]
+          ]
+          [set heading 90]
         ]
         [
           set-speed -1 0
@@ -394,6 +426,8 @@ to set-car-speed  ;; turtle procedure
       ]
     ]
   ]
+  if (patch-here = patch 20 6) or (patch-here = patch 20 4)
+  [die ]
 end
 
 ;; set the speed variable of the car to an appropriate value (not exceeding the
@@ -463,10 +497,10 @@ end
 GRAPHICS-WINDOW
 286
 34
-895
-430
-20
-12
+893
+408
+-1
+-1
 14.61
 1
 10
@@ -474,8 +508,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -20
 20
@@ -513,7 +547,7 @@ number-of-cars
 number-of-cars
 1
 100
-30
+30.0
 1
 1
 NIL
@@ -575,7 +609,7 @@ ticks-per-cycle
 ticks-per-cycle
 50
 100
-90
+90.0
 10
 1
 NIL
@@ -590,7 +624,7 @@ current-phase
 current-phase
 0
 99
-0
+0.0
 1
 1
 %
@@ -614,7 +648,7 @@ SWITCH
 347
 power?
 power?
-1
+0
 1
 -1000
 
@@ -989,9 +1023,8 @@ false
 0
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
-
 @#$#@#$#@
-NetLogo 5.3.1
+NetLogo 6.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -1007,7 +1040,6 @@ true
 0
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
-
 @#$#@#$#@
 0
 @#$#@#$#@
