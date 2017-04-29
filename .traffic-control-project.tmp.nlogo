@@ -491,7 +491,8 @@ to set-car-speed  ;; turtle procedure
       ]
     ]
   ]
-  if (patch-here = patch 20 6) or (patch-here = patch 20 4) or (patch-here = patch -20 -6) or (patch-here = patch -20 -4) or (patch-here = patch -10 -12) or (patch-here = patch 10 12) or (patch-here = patch -8 -12) or (patch-here = patch 8 12)
+  ;if (patch-here = patch 20 6) or (patch-here = patch 20 4) or (patch-here = patch -20 -6) or (patch-here = patch -20 -4) or (patch-here = patch -10 -12) or (patch-here = patch 10 12) or (patch-here = patch -8 -12) or (patch-here = patch 8 12)
+  if (patch-here = patch abs 20 abs 6) or (patch-here = patch abs 20 abs 4)  or (patch-here = patch abs 10 abs 12) or (patch-here = patch abs 8 -12) or (patch-here = patch 8 12)
   [
     set dead_turtles dead_turtles + 1
     die
