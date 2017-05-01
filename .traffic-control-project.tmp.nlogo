@@ -64,11 +64,33 @@ to create-or-remove-cars
     set wait-time 0
     set speed 0
     move-to one-of free road-patches with [not any? turtles-on self]
+    ask turtles with [(member? ycor right_lanes) and (xcor > -12) and destination? = 0]
+    [
+      ;move-to patch (random(-20 - -12) + -12) ycor
+      move-to patch (random(-20 - -12) + -12) ycor
+    ]
+    ask turtles with [(member? ycor left_lanes) and (xcor < 12) and destination? = 0]
+    [
+      move-to patch (random(20 - 12) + 12) ycor
+
+    ]
+    ask turtles with [(member? xcor down_lanes) and (ycor < 7) and destination? = 0  ]
+    [
+      move-to patch xcor (random(12 - 8) + 8)
+    ]
+    ask turtles with [(member? xcor up_lanes) and (ycor > -7) and destination? = 0 ]
+    [
+      move-to patch xcor (random(-7 - -12) + -12)
+    ]
     ask turtles with [member? ycor right_lanes] [set up-car? false set down-car? false set left-car? true set right-car? false ]
     ask turtles with [member? ycor left_lanes] [set up-car? false set down-car? false set left-car? false set right-car? true  set shape "left_car" ]
     ask turtles with [member? xcor up_lanes] [set up-car? true set down-car? false set left-car? false set right-car? false set shape "up_car" ]
     ask turtles with [member? xcor down_lanes] [set up-car? false set down-car? true set left-car? false set right-car? false set shape "down_car" ]
     set top-speed 0.5 + random-float 0.5
+
+
+
+
   ]
   if count turtles > number-of-cars [
     let n count turtles - number-of-cars
@@ -80,49 +102,38 @@ to set-destination
   ;Set destination for cars who drives from left to right
   ask turtles with [(member? ycor right_lanes) and (xcor < -12) and destination? = 0]
   [
-    set color white
     set start-point (list xcor ycor)
-    ask patch-here [set pcolor red]
     set y-coordinate ycor
     set x-coordinate xcor
     set end-point (list (random(20 - -6) + -6)  y-coordinate)
     ;ask end-point [set pcolor yellow]
-    ask patch first end-point last end-point [ set pcolor white ]
+    ;ask patch first end-point last end-point [ set pcolor white ]
     set destination? true
   ]
   ;Set destination for cars who drives from right to left
   ask turtles with [(member? ycor left_lanes) and (xcor > 12) and destination? = 0]
   [
-    set color white
     set start-point (list xcor ycor)
-    ask patch-here [set pcolor red]
     set y-coordinate ycor
     set x-coordinate xcor
     set end-point (list (random(-20 - 6) + 6)  y-coordinate)
-    ask patch first end-point last end-point [ set pcolor white ]
     set destination? true
   ]
   ;Set destination for cars who drives from up to down
   ask turtles with [(member? xcor down_lanes) and (ycor > 7) and destination? = 0]
   [
-    set color white
     set start-point (list xcor ycor)
-    ask patch-here [set pcolor red]
     set y-coordinate ycor
     set x-coordinate xcor
     set end-point (list x-coordinate  (random(-12 - 0) + 0))
-    ask patch first end-point last end-point [ set pcolor white ]
     set destination? true
   ]
   ask turtles with [(member? xcor up_lanes) and (ycor < -7) and destination? = 0]
   [
-    set color white
     set start-point (list xcor ycor)
-    ask patch-here [set pcolor red]
     set y-coordinate ycor
     set x-coordinate xcor
     set end-point (list x-coordinate  (random(12 - -8) + -8))
-    ask patch first end-point last end-point [ set pcolor white ]
     set destination? true
   ]
 end
@@ -491,8 +502,7 @@ to set-car-speed  ;; turtle procedure
       ]
     ]
   ]
-  ;if (patch-here = patch 20 6) or (patch-here = patch 20 4) or (patch-here = patch -20 -6) or (patch-here = patch -20 -4) or (patch-here = patch -10 -12) or (patch-here = patch 10 12) or (patch-here = patch -8 -12) or (patch-here = patch 8 12)
-  if (patch-here = patch abs 20 abs 6) or (patch-here = patch abs 20 abs 4)  or (patch-here = patch abs 10 abs 12) or (patch-here = patch abs 8 -12) or (patch-here = patch 8 12)
+  if (patch-here = patch 20 6) or (patch-here = patch 20 4) or (patch-here = patch -20 -6) or (patch-here = patch -20 -4) or (patch-here = patch -10 -12) or (patch-here = patch 10 12) or (patch-here = patch -8 -12) or (patch-here = patch 8 12)
   [
     set dead_turtles dead_turtles + 1
     die
