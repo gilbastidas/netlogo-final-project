@@ -10,7 +10,11 @@ globals [
   x-coordinate
   y-coordinate
   succesful_agents
+  arrived_agents
   dead_turtles
+  random_pos
+  random-HCC
+  random-EC
 ]
 
 turtles-own [
@@ -24,7 +28,11 @@ turtles-own [
   right-car?
   left-car?
   destination?
+  time?
   wait-time ;; the amount of time since the last time a turtle has moved
+  priority
+  HCC?
+  EC?
 ]
 
 patches-own
@@ -61,79 +69,155 @@ to create-or-remove-cars
 
   create-turtles (number-of-cars - count turtles) [
     set color 108 + random-float 1.0
-    set wait-time 0
+    set random-HCC (random-float 1.0)
+    set random-EC (random-float (percentage_HCC + percentage_EC))
+    if random-HCC < (percentage_HCC + percentage_EC)
+    [
+      ifelse random-EC < percentage_HCC
+      [
+        set color yellow
+        set HCC? true
+      ]
+      [
+        set color red
+        set priority 1;
+        set EC? true
+      ]
+    ]
+    ;set wait-time 0
     set speed 0
     move-to one-of free road-patches with [not any? turtles-on self]
     ask turtles with [(member? ycor right_lanes) and (xcor > -12) and destination? = 0]
     [
-      ;move-to patch (random(-20 - -12) + -12) ycor
       move-to patch (random(-20 - -12) + -12) ycor
     ]
     ask turtles with [(member? ycor left_lanes) and (xcor < 12) and destination? = 0]
     [
       move-to patch (random(20 - 12) + 12) ycor
-
     ]
-    ask turtles with [(member? xcor down_lanes) and (ycor < 7) and destination? = 0  ]
+    ask turtles with [(member? xcor down_lanes) and (ycor < 8) and destination? = 0  ]
     [
       move-to patch xcor (random(12 - 8) + 8)
     ]
-    ask turtles with [(member? xcor up_lanes) and (ycor > -7) and destination? = 0 ]
+    ask turtles with [(member? xcor up_lanes) and (ycor > -8) and destination? = 0 ]
     [
-      move-to patch xcor (random(-7 - -12) + -12)
+      move-to patch xcor (random(-12 - -8) + -8)
     ]
     ask turtles with [member? ycor right_lanes] [set up-car? false set down-car? false set left-car? true set right-car? false ]
     ask turtles with [member? ycor left_lanes] [set up-car? false set down-car? false set left-car? false set right-car? true  set shape "left_car" ]
     ask turtles with [member? xcor up_lanes] [set up-car? true set down-car? false set left-car? false set right-car? false set shape "up_car" ]
     ask turtles with [member? xcor down_lanes] [set up-car? false set down-car? true set left-car? false set right-car? false set shape "down_car" ]
     set top-speed 0.5 + random-float 0.5
-
-
-
-
   ]
   if count turtles > number-of-cars [
     let n count turtles - number-of-cars
   ]
   set-destination
+  set-time
+end
+
+to set-time
+  ask turtles with [destination? = true and time? = 0]
+  [
+    ifelse ((HCC? = true) or (EC? = true))
+    [
+      ;set color white
+      set wait-time (max(list abs(first end-point - first start-point) abs(last end-point - last start-point)) * ticks-per-square / 2)
+    ]
+    [
+      set wait-time (max(list abs(first end-point - first start-point) abs(last end-point - last start-point)) * ticks-per-square)
+    ]
+    set time? true
+  ]
+end
+
+to update-time
+  ask turtles with [time? = true]
+  [
+    set wait-time (wait-time - 1)
+  ]
 end
 
 to set-destination
   ;Set destination for cars who drives from left to right
-  ask turtles with [(member? ycor right_lanes) and (xcor < -12) and destination? = 0]
+  ask turtles with [(member? ycor right_lanes) and (xcor <= -12) and destination? = 0]
   [
+    ;set color white
     set start-point (list xcor ycor)
+    ;ask patch-here [set pcolor red]
     set y-coordinate ycor
     set x-coordinate xcor
-    set end-point (list (random(20 - -6) + -6)  y-coordinate)
+    set random_pos random(2);
+    ifelse (random_pos = 1)
+    [
+      set end-point (list (random(6 - -6) + -6)  y-coordinate)
+    ]
+    [
+      set end-point (list (random(20 - 12) + 12)  y-coordinate)
+    ]
+    ;set end-point (list (random(20 - -6) + -6)  y-coordinate)
     ;ask end-point [set pcolor yellow]
     ;ask patch first end-point last end-point [ set pcolor white ]
     set destination? true
   ]
   ;Set destination for cars who drives from right to left
-  ask turtles with [(member? ycor left_lanes) and (xcor > 12) and destination? = 0]
+  ask turtles with [(member? ycor left_lanes) and (xcor >= 12) and destination? = 0]
   [
+    ;set color white
     set start-point (list xcor ycor)
+    ;ask patch-here [set pcolor red]
     set y-coordinate ycor
     set x-coordinate xcor
-    set end-point (list (random(-20 - 6) + 6)  y-coordinate)
+    set random_pos random(2);
+    ifelse (random_pos = 1)
+    [
+      set end-point (list (random(-6 - 6) + 6)  y-coordinate)
+    ]
+    [
+      set end-point (list (random(-20 - -12) + -12)  y-coordinate)
+    ]
+    ;set end-point (list (random(-20 - 6) + 6)  y-coordinate)
+    ;ask patch first end-point last end-point [ set pcolor white ]
     set destination? true
   ]
   ;Set destination for cars who drives from up to down
   ask turtles with [(member? xcor down_lanes) and (ycor > 7) and destination? = 0]
   [
+    ;set color white
     set start-point (list xcor ycor)
+    ;ask patch-here [set pcolor red]
     set y-coordinate ycor
     set x-coordinate xcor
-    set end-point (list x-coordinate  (random(-12 - 0) + 0))
+    set random_pos random(2);
+    ifelse (random_pos = 1)
+    [
+      set end-point (list x-coordinate (random(-2 - 2) + 2))
+    ]
+    [
+      set end-point (list x-coordinate (random(-12 - -8) + -8))
+    ]
+    ;set end-point (list x-coordinate  (random(-12 - 2) + 2))
+    ;ask patch first end-point last end-point [ set pcolor white ]
     set destination? true
   ]
+  ;Set destination for cars who drives from down to up
   ask turtles with [(member? xcor up_lanes) and (ycor < -7) and destination? = 0]
   [
+    ;set color white
     set start-point (list xcor ycor)
+    ;ask patch-here [set pcolor red]
     set y-coordinate ycor
     set x-coordinate xcor
-    set end-point (list x-coordinate  (random(12 - -8) + -8))
+    set random_pos random(2);
+    ifelse (random_pos = 1)
+    [
+      set end-point (list x-coordinate (random(2 - -2) + -2))
+    ]
+    [
+      set end-point (list x-coordinate (random(12 - 8) + 8))
+    ]
+    ;set end-point (list x-coordinate  (random(12 - -2) + -2))
+    ;ask patch first end-point last end-point [ set pcolor white ]
     set destination? true
   ]
 end
@@ -291,6 +375,7 @@ to go
   update-current
   set-signals
   set num-cars-stopped 0
+  update-time
   ask turtles [
     set-car-speed
     fd speed ]
@@ -301,6 +386,8 @@ to go
     create-or-remove-cars
     set dead_turtles 0
   ]
+  if arrived_agents >= 1000
+    [stop]
   tick
 end
 
@@ -462,7 +549,12 @@ to set-car-speed  ;; turtle procedure
             if patch-here = patch first end-point last end-point
             [
               set destination? false
-              set succesful_agents succesful_agents + 1]
+              set arrived_agents arrived_agents + 1
+              if wait-time >= 0
+              [
+                set succesful_agents succesful_agents + 1
+              ]
+            ]
           ]
     ]
     [ ifelse down-car? = true
@@ -473,7 +565,12 @@ to set-car-speed  ;; turtle procedure
             if patch-here = patch first end-point last end-point
             [
               set destination? false
-              set succesful_agents succesful_agents + 1]
+              set arrived_agents arrived_agents + 1
+              if wait-time >= 0
+              [
+                set succesful_agents succesful_agents + 1
+              ]
+            ]
           ]
       ]
       [ ifelse left-car? = true
@@ -485,7 +582,12 @@ to set-car-speed  ;; turtle procedure
             if patch-here = patch first end-point last end-point
             [
               set destination? false
-              set succesful_agents succesful_agents + 1]
+              set arrived_agents arrived_agents + 1
+              if wait-time >= 0
+              [
+                set succesful_agents succesful_agents + 1
+              ]
+            ]
           ]
         ]
         [
@@ -496,7 +598,12 @@ to set-car-speed  ;; turtle procedure
             if patch-here = patch first end-point last end-point
             [
               set destination? false
-              set succesful_agents succesful_agents + 1]
+              set arrived_agents arrived_agents + 1
+              if wait-time >= 0
+              [
+                set succesful_agents succesful_agents + 1
+              ]
+            ]
           ]
         ]
       ]
@@ -522,8 +629,20 @@ to set-speed [ delta-x delta-y ]  ;; turtle procedure
     [
       ifelse any? (turtles-ahead with [ down-car? = [down-car?] of myself ])
       [
-        set speed [speed] of one-of turtles-ahead
-        slow-down
+        ifelse any? (turtles-ahead with [ left-car? = [left-car?] of myself ])
+        [
+          ifelse any? (turtles-ahead with [ right-car? = [right-car?] of myself ])
+          [
+            set speed [speed] of one-of turtles-ahead
+            slow-down
+          ]
+          [
+            set speed 0
+          ]
+        ]
+        [
+          set speed 0
+        ]
       ]
       [
         set speed 0
@@ -626,7 +745,7 @@ number-of-cars
 number-of-cars
 1
 100
-10.0
+50.0
 1
 1
 NIL
@@ -711,9 +830,9 @@ HORIZONTAL
 
 SWITCH
 99
-270
+403
 242
-303
+436
 current-auto?
 current-auto?
 0
@@ -721,10 +840,10 @@ current-auto?
 -1000
 
 SWITCH
-142
-314
-245
-347
+100
+445
+203
+478
 power?
 power?
 0
@@ -732,10 +851,10 @@ power?
 -1000
 
 MONITOR
-1010
-35
-1130
-80
+906
+146
+1009
+191
 NIL
 succesful_agents
 0
@@ -745,13 +864,124 @@ succesful_agents
 MONITOR
 906
 35
-999
+1009
 80
 NIL
 count turtles
 17
 1
 11
+
+SLIDER
+98
+267
+270
+300
+ticks-per-square
+ticks-per-square
+0
+25
+0.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+905
+91
+1009
+136
+arrived_agents
+arrived_agents
+17
+1
+11
+
+SLIDER
+98
+313
+270
+346
+percentage_HCC
+percentage_HCC
+0
+0.5
+0.1
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+98
+359
+270
+392
+percentage_EC
+percentage_EC
+0
+0.2
+0.01
+0.01
+1
+NIL
+HORIZONTAL
+
+PLOT
+1025
+35
+1225
+185
+Avergae car speed
+Time
+Speed
+0.0
+300.0
+0.0
+0.5
+true
+false
+"" ""
+PENS
+"average" 1.0 0 -14454117 true "" "plot mean [ speed ] of turtles"
+
+PLOT
+1028
+194
+1228
+344
+Wait time
+NIL
+NIL
+0.0
+100.0
+0.0
+100.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -11221820 true "" "plot mean [wait-time] of turtles"
+
+PLOT
+1029
+353
+1229
+503
+Succesful agents
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"default" 1.0 0 -11033397 true "" "plot mean [arrived_agents] of turtles"
+"pen-1" 1.0 0 -8732573 true "" "plot mean [succesful_agents] of turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
